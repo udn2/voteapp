@@ -3,65 +3,507 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบโหวตผลงาน</title>
-    <!-- โหลด Bootstrap 5 เพื่อความสวยงาม -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>TikTok Video Contest Voting</title>
+    
+    <!-- Tailwind CSS for Modern UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Prompt', 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* TikTok style gradient */
+        .tiktok-gradient {
+            background: linear-gradient(45deg, #00f2fe 0%, #4facfe 100%);
+        }
+        .tiktok-text {
+            background: linear-gradient(45deg, #fe2c55, #25f4ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+    </style>
 </head>
-<body class="bg-light p-4">
+<body class="text-gray-800 antialiased min-h-screen flex flex-col">
 
-    <div class="container bg-white p-4 rounded shadow-sm max-w-md">
-        <h4 class="mb-4">ทดสอบเพิ่มวิดีโอเข้าระบบ</h4>
-        <!-- ปุ่มสำหรับกดเพื่อเรียกฟังก์ชันเพิ่มข้อมูล -->
-        <button onclick="addFirstVideo()" class="btn btn-primary">
-            + บันทึกวิดีโอทดสอบลง Firestore
-        </button>
-    </div>
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fa-brands fa-tiktok text-3xl mr-2 text-black"></i>
+                    <span class="font-bold text-xl tiktok-text">EduVote</span>
+                </div>
+                <div class="flex items-center space-x-1 sm:space-x-4">
+                    <button onclick="switchTab('vote-tab')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-black hover:bg-gray-100 transition" id="btn-vote-tab">
+                        <i class="fa-solid fa-fire mr-1 text-red-500"></i> โหวตผลงาน
+                    </button>
+                    <button onclick="switchTab('submit-tab')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-black hover:bg-gray-100 transition" id="btn-submit-tab">
+                        <i class="fa-solid fa-paper-plane mr-1 text-blue-500"></i> ส่งผลงาน
+                    </button>
+                    <button onclick="switchTab('admin-tab')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-black hover:bg-gray-100 transition" id="btn-admin-tab">
+                        <i class="fa-solid fa-gear mr-1 text-gray-500"></i> จัดการ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-    <!-- ========================================== -->
-    <!-- ส่วนของ Firebase Script (วางไว้ก่อนปิด body) -->
-    <!-- ========================================== -->
+    <!-- Custom Toast Notification (Replaces alert) -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+        <!-- ==================== VOTING TAB ==================== -->
+        <section id="vote-tab" class="tab-content">
+            <div class="text-center mb-10">
+                <h1 class="text-3xl md:text-4xl font-bold mb-3">🔥 โหวตวิดีโอยอดเยี่ยม</h1>
+                <p class="text-gray-500">ร่วมโหวตให้คะแนนผลงานที่คุณชื่นชอบ (1 คน / 1 โหวต / 1 วิดีโอ)</p>
+            </div>
+            
+            <div id="loading-videos" class="text-center py-10">
+                <i class="fa-solid fa-spinner fa-spin text-4xl text-gray-400 mb-3"></i>
+                <p class="text-gray-500">กำลังโหลดข้อมูล...</p>
+            </div>
+
+            <!-- Video Grid -->
+            <div id="video-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
+                <!-- Cards will be injected here by JS -->
+            </div>
+        </section>
+
+        <!-- ==================== SUBMIT TAB ==================== -->
+        <section id="submit-tab" class="tab-content hidden max-w-2xl mx-auto">
+            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold">📤 ส่งผลงานเข้าร่วมประกวด</h2>
+                    <p class="text-gray-500 text-sm mt-2">กรอกข้อมูลให้ครบถ้วนและตรวจสอบลิงก์วิดีโอ</p>
+                </div>
+
+                <form id="submit-form" class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อผลงาน (Title) *</label>
+                        <input type="text" id="inp-title" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="เช่น นวัตกรรมลดโลกร้อน">
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อทีม *</label>
+                            <input type="text" id="inp-team" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="เช่น ทีมพลังใบ">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">โรงเรียน / สถาบัน *</label>
+                            <input type="text" id="inp-school" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="เช่น รร.ตัวอย่าง">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อผู้ส่ง (ตัวแทน) *</label>
+                        <input type="text" id="inp-name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="นาย/นางสาว...">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ลิงก์ TikTok (URL เต็ม) *</label>
+                        <input type="url" id="inp-link" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="https://www.tiktok.com/@username/video/1234567890">
+                        <p class="text-xs text-gray-400 mt-1"><i class="fa-solid fa-circle-info"></i> กรุณาใช้ลิงก์เต็มผ่านเบราว์เซอร์ เพื่อให้ระบบดึงวิดีโอมาแสดงได้</p>
+                    </div>
+
+                    <button type="submit" id="btn-submit" class="w-full bg-black text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-800 transition shadow-md flex justify-center items-center">
+                        <i class="fa-solid fa-cloud-arrow-up mr-2"></i> ส่งผลงาน
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ==================== ADMIN TAB ==================== -->
+        <section id="admin-tab" class="tab-content hidden">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                <h2 class="text-2xl font-bold"><i class="fa-solid fa-shield-halved text-blue-600 mr-2"></i> ระบบจัดการ (Admin Panel)</h2>
+                <div class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg text-sm">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> โหมดจำลองสำหรับทดสอบ
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ผลงาน/ทีม</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">คะแนนโหวต</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะโหวต</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Table rows injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="admin-empty" class="text-center py-10 hidden">
+                    <p class="text-gray-500">ยังไม่มีข้อมูลผลงาน</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Firebase SDK Imports -->
     <script type="module">
-        // 1. นำเข้าเครื่องมือที่ต้องใช้จาก Firebase ผ่าน CDN
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, addDoc, orderBy, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 2. นำ firebaseConfig ที่ก๊อปปี้มา วางตรงนี้ครับ
+        // Firebase Configuration
         const firebaseConfig = {
-  apiKey: "AIzaSyBCVi3Q-KGiJYSyXMHSfPm6-uTMGABz6Rk",
-  authDomain: "udon2-voteapp.firebaseapp.com",
-  databaseURL: "https://udon2-voteapp-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "udon2-voteapp",
-  storageBucket: "udon2-voteapp.firebasestorage.app",
-  messagingSenderId: "902343606831",
-  appId: "1:902343606831:web:b637ae90dbbce540327cda"
-};
+            apiKey: "AIzaSyBCVi3Q-KGiJYSyXMHSfPm6-uTMGABz6Rk",
+            authDomain: "udon2-voteapp.firebaseapp.com",
+            databaseURL: "https://udon2-voteapp-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "udon2-voteapp",
+            storageBucket: "udon2-voteapp.firebasestorage.app",
+            messagingSenderId: "902343606831",
+            appId: "1:902343606831:web:b637ae90dbbce540327cda"
+        };
 
-        // 3. เริ่มต้นเชื่อมต่อแอปและฐานข้อมูล Firestore
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        let currentUser = null;
+        let globalVideosData = []; // Store videos for admin view
+        
+        // --- UI & Helper Functions ---
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+            
+            // Highlight active nav button
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('bg-gray-100', 'text-black');
+            });
+            document.getElementById(`btn-${tabId}`).classList.add('bg-gray-100', 'text-black');
+        };
 
-        // 4. เขียนฟังก์ชันสำหรับเพิ่มข้อมูล
-        // ใช้ window.addFirstVideo เพื่อให้ปุ่มใน HTML มองเห็นฟังก์ชันนี้
-        window.addFirstVideo = async function() {
-            try {
-                // อ้างอิงไปที่ Collection ชื่อ "videos" (ถ้ายังไม่มี ระบบจะสร้างให้เอง)
-                const docRef = await addDoc(collection(db, "videos"), {
-                    title: "โครงงานนวัตกรรมสื่อการสอน",
-                    teamName: "โรงเรียนตัวอย่าง",
-                    url: "https://www.tiktok.com/@username/video/123456789",
-                    score: 0, // เริ่มต้นที่ 0 คะแนน
-                    isOpen: true, // สถานะเปิดรับโหวต
-                    createdAt: new Date() // เก็บเวลาที่ส่งงาน
+        window.showToast = function(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgClass = type === 'success' ? 'bg-green-500' : (type === 'error' ? 'bg-red-500' : 'bg-blue-500');
+            let iconClass = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-circle-xmark' : 'fa-info-circle');
+            
+            toast.className = `${bgClass} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 transform transition-all duration-300 translate-y-10 opacity-0`;
+            toast.innerHTML = `<i class="fa-solid ${iconClass} text-xl"></i> <span class="font-medium">${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            }, 10);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+
+        // Extract TikTok Video ID from URL
+        function extractTiktokId(url) {
+            // matches standard urls like https://www.tiktok.com/@user/video/1234567890
+            const regex = /video\/(\d+)/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        // --- App Initialization & Auth ---
+        // Initialize Default Tab
+        switchTab('vote-tab');
+
+        // Authenticate User Anonymously (Requirement for Firestore)
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                console.log("User signed in:", user.uid);
+                initDataListeners();
+            } else {
+                signInAnonymously(auth).catch((error) => {
+                    console.error("Auth Error:", error);
+                    showToast("ไม่สามารถเชื่อมต่อระบบยืนยันตัวตนได้", "error");
+                });
+            }
+        });
+
+        // --- Core Functions ---
+        function initDataListeners() {
+            if (!currentUser) return;
+
+            const videosRef = collection(db, 'tiktok_entries');
+            
+            // Real-time listener for videos
+            onSnapshot(videosRef, (snapshot) => {
+                document.getElementById('loading-videos').classList.add('hidden');
+                document.getElementById('video-grid').classList.remove('hidden');
+                
+                globalVideosData = [];
+                const videoGrid = document.getElementById('video-grid');
+                const adminTable = document.getElementById('admin-table-body');
+                const adminEmpty = document.getElementById('admin-empty');
+                
+                videoGrid.innerHTML = '';
+                adminTable.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    videoGrid.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">ยังไม่มีผลงานที่ส่งเข้ามา เป็นคนแรกที่ส่งผลงานสิ!</div>';
+                    adminEmpty.classList.remove('hidden');
+                    return;
+                }
+
+                adminEmpty.classList.add('hidden');
+
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const id = docSnap.id;
+                    data.id = id;
+                    globalVideosData.push(data);
+                    
+                    // Render User Card
+                    renderVideoCard(data, videoGrid);
+                    
+                    // Render Admin Row
+                    renderAdminRow(data, adminTable);
                 });
                 
-                alert("บันทึกข้อมูลสำเร็จ! ID เอกสารคือ: " + docRef.id);
-                console.log("Document written with ID: ", docRef.id);
+                // Sort array purely for display logic if needed (Firestore complex queries disabled by rules)
+                // globalVideosData.sort((a, b) => b.votes - a.votes);
+            }, (error) => {
+                console.error("Listener error:", error);
+                showToast("ดึงข้อมูลล้มเหลว", "error");
+            });
+        }
 
+        function renderVideoCard(data, container) {
+            const card = document.createElement('div');
+            card.className = "bg-white rounded-2xl shadow-md overflow-hidden card-hover flex flex-col h-full border border-gray-100";
+            
+            // Check if voting is open
+            const isVoteOpen = data.isVotingOpen;
+            let voteBtnHtml = '';
+            
+            if (isVoteOpen) {
+                voteBtnHtml = `
+                    <button onclick="castVote('${data.id}')" id="btn-vote-${data.id}" class="w-full mt-4 bg-black text-white font-bold py-3 px-4 rounded-xl hover:bg-gray-800 transition flex items-center justify-center group">
+                        <i class="fa-solid fa-heart mr-2 group-hover:scale-125 group-hover:text-pink-500 transition-transform"></i> โหวตให้ทีมนี้
+                    </button>
+                `;
+            } else {
+                voteBtnHtml = `
+                    <button disabled class="w-full mt-4 bg-gray-200 text-gray-500 font-bold py-3 px-4 rounded-xl cursor-not-allowed flex items-center justify-center">
+                        <i class="fa-solid fa-lock mr-2"></i> ปิดโหวตแล้ว
+                    </button>
+                `;
+            }
+
+            card.innerHTML = `
+                <!-- Video Embed Container (16:9 Aspect Ratio box for TikTok) -->
+                <div class="relative w-full bg-black flex justify-center items-center" style="padding-top: 150%;"> 
+                    <iframe src="https://www.tiktok.com/embed/v2/${data.tiktokVideoId}" 
+                        class="absolute top-0 left-0 w-full h-full border-none" 
+                        allowfullscreen scrolling="no" allow="encrypted-media;"></iframe>
+                </div>
+                
+                <div class="p-5 flex flex-col flex-grow">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-lg font-bold text-gray-900 line-clamp-2">${data.title}</h3>
+                    </div>
+                    
+                    <div class="text-sm text-gray-600 mb-4 space-y-1">
+                        <p><i class="fa-solid fa-users w-5 text-center text-blue-500"></i> ${data.teamName}</p>
+                        <p><i class="fa-solid fa-school w-5 text-center text-green-500"></i> ${data.school}</p>
+                        <p><i class="fa-solid fa-user w-5 text-center text-gray-400"></i> ${data.submitterName}</p>
+                    </div>
+                    
+                    <div class="mt-auto">
+                        <div class="bg-pink-50 rounded-xl p-3 flex justify-between items-center border border-pink-100">
+                            <span class="text-sm font-semibold text-pink-600">คะแนนโหวตรวม</span>
+                            <span class="text-2xl font-bold text-pink-600" id="score-${data.id}">${data.votes.toLocaleString()}</span>
+                        </div>
+                        ${voteBtnHtml}
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        }
+
+        // --- Voting Logic ---
+        window.castVote = async function(videoId) {
+            if (!currentUser) return;
+            
+            const btn = document.getElementById(`btn-vote-${videoId}`);
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังบันทึก...';
+            btn.disabled = true;
+
+            try {
+                // 1. Check if user already voted for this video
+                const voteRecordRef = doc(db, 'users', currentUser.uid, 'votes', videoId);
+                const voteRecordSnap = await getDoc(voteRecordRef);
+                
+                if (voteRecordSnap.exists()) {
+                    showToast("คุณโหวตให้ผลงานนี้ไปแล้ว", "error");
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                    return;
+                }
+
+                // 2. Mark as voted in user's private collection
+                await setDoc(voteRecordRef, { timestamp: serverTimestamp() });
+
+                // 3. Increment public vote count
+                const videoRef = doc(db, 'tiktok_entries', videoId);
+                await updateDoc(videoRef, {
+                    votes: increment(1)
+                });
+                
+                showToast("โหวตสำเร็จ! ขอบคุณที่ร่วมสนุก 🎉", "success");
+                // Note: The UI card score will update automatically via onSnapshot!
+                
             } catch (error) {
-                console.error("เกิดข้อผิดพลาดในการบันทึก: ", error);
-                alert("บันทึกไม่สำเร็จ ลองตรวจสอบ Console");
+                console.error("Vote error:", error);
+                showToast("เกิดข้อผิดพลาด กรุณาลองใหม่", "error");
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
             }
         };
+
+        // --- Submit Form Logic ---
+        document.getElementById('submit-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const btn = document.getElementById('btn-submit');
+            const title = document.getElementById('inp-title').value.trim();
+            const team = document.getElementById('inp-team').value.trim();
+            const school = document.getElementById('inp-school').value.trim();
+            const name = document.getElementById('inp-name').value.trim();
+            const link = document.getElementById('inp-link').value.trim();
+
+            const tiktokId = extractTiktokId(link);
+            if (!tiktokId) {
+                showToast("ไม่สามารถดึงข้อมูลวิดีโอได้ กรุณาใช้ลิงก์ TikTok เต็มรูปแบบ", "error");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังส่งข้อมูล...';
+
+            try {
+                const entriesRef = collection(db, 'tiktok_entries');
+                await addDoc(entriesRef, {
+                    title: title,
+                    teamName: team,
+                    school: school,
+                    submitterName: name,
+                    tiktokUrl: link,
+                    tiktokVideoId: tiktokId,
+                    votes: 0,
+                    isVotingOpen: true, // Default open
+                    createdAt: serverTimestamp()
+                });
+                
+                showToast("ส่งผลงานเรียบร้อยแล้ว!", "success");
+                document.getElementById('submit-form').reset();
+                switchTab('vote-tab'); // Redirect to gallery
+                
+            } catch (error) {
+                console.error("Submit error:", error);
+                showToast("เกิดข้อผิดพลาดในการส่งข้อมูล", "error");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> ส่งผลงาน';
+            }
+        });
+
+        // --- Admin Logic ---
+        function renderAdminRow(data, container) {
+            const tr = document.createElement('tr');
+            
+            const statusBadge = data.isVotingOpen 
+                ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">เปิดรับโหวต</span>'
+                : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">ปิดโหวตแล้ว</span>';
+                
+            const toggleActionTxt = data.isVotingOpen ? 'ปิดโหวต' : 'เปิดโหวต';
+            const toggleIcon = data.isVotingOpen ? 'fa-lock' : 'fa-lock-open';
+            const toggleColor = data.isVotingOpen ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900';
+
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <div class="ml-4">
+                            <div class="text-sm font-medium text-gray-900 line-clamp-1 max-w-xs" title="${data.title}">${data.title}</div>
+                            <div class="text-sm text-gray-500">${data.teamName}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900 font-bold">${data.votes.toLocaleString()}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    ${statusBadge}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                    <button onclick="toggleVoting('${data.id}', ${!data.isVotingOpen})" class="${toggleColor}">
+                        <i class="fa-solid ${toggleIcon}"></i> ${toggleActionTxt}
+                    </button>
+                    <button onclick="deleteVideo('${data.id}')" class="text-red-600 hover:text-red-900">
+                        <i class="fa-solid fa-trash"></i> ลบ
+                    </button>
+                </td>
+            `;
+            container.appendChild(tr);
+        }
+
+        window.toggleVoting = async function(videoId, newState) {
+            if (!currentUser) return;
+            try {
+                const videoRef = doc(db, 'tiktok_entries', videoId);
+                await updateDoc(videoRef, { isVotingOpen: newState });
+                showToast(`อัปเดตสถานะสำเร็จ`, "success");
+            } catch (error) {
+                console.error("Toggle error:", error);
+                showToast("อัปเดตสถานะล้มเหลว", "error");
+            }
+        };
+
+        window.deleteVideo = async function(videoId) {
+            if (!currentUser) return;
+            // Simulated confirm (since alert/confirm is blocked)
+            // In a real app, use a custom modal. For demo, we delete directly with a toast warning if they misclick.
+            try {
+                const videoRef = doc(db, 'tiktok_entries', videoId);
+                await deleteDoc(videoRef);
+                showToast("ลบข้อมูลผลงานแล้ว", "success");
+            } catch (error) {
+                console.error("Delete error:", error);
+                showToast("ลบข้อมูลล้มเหลว", "error");
+            }
+        };
+
     </script>
 </body>
 </html>
