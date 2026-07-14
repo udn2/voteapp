@@ -3,40 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TikTok Video Contest Voting</title>
-    
-    <!-- Tailwind CSS for Modern UI -->
+    <title>UDON 2 Anti Drunks Tiktok Vote</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Prompt', 'Inter', sans-serif;
-            background-color: #f3f4f6;
-        }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        /* TikTok style gradient */
-        .tiktok-gradient {
-            background: linear-gradient(45deg, #00f2fe 0%, #4facfe 100%);
-        }
-        .tiktok-text {
-            background: linear-gradient(45deg, #fe2c55, #25f4ee);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        body { font-family: 'Kanit', sans-serif; background-color: #f3f4f6; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* สไตล์สำหรับ Toast Notification */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 50; display: flex; flex-direction: column; gap: 10px; }
+        .toast { padding: 12px 24px; border-radius: 8px; color: white; font-weight: 500; box-shadow: 0 4px 6px rgba(0,0,0,0.1); animation: slideIn 0.3s forwards, fadeOut 0.3s 2.7s forwards; opacity: 0; transform: translateX(100%); }
+        .toast.success { background-color: #10B981; }
+        .toast.error { background-color: #EF4444; }
+        .toast.info { background-color: #3B82F6; }
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateX(100%); } }
     </style>
 </head>
 <body class="text-gray-800">
@@ -298,6 +281,17 @@
             });
         }
 
+        // ฟังก์ชันดึง ID ของ TikTok จาก URL เพื่อนำมาเล่นในหน้าเว็บ
+        function getTikTokVideoId(url) {
+            try {
+                // ค้นหาตัวเลข ID ยาวๆ ที่ต่อท้าย /video/ ในลิงก์ของ TikTok
+                const match = url.match(/\/video\/(\d+)/);
+                return match ? match[1] : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
         // ฟังก์ชันวาดการ์ดโหวต
         function renderVoteCard(id, data, container) {
             const hasVoted = localStorage.getItem(`voted_${id}`);
@@ -307,39 +301,65 @@
             
             let statusBadge = '';
             if (!data.isOpen) {
-                statusBadge = '<div class="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded shadow"><i class="fa-solid fa-lock text-xs mr-1"></i> ปิดโหวต</div>';
+                statusBadge = '<div class="absolute top-3 right-3 z-20 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded shadow"><i class="fa-solid fa-lock text-xs mr-1"></i> ปิดโหวต</div>';
+            }
+
+            // จัดการส่วนของการแสดงผลวิดีโอ (TikTok Embed Player)
+            const videoId = getTikTokVideoId(data.url);
+            let mediaHtml = '';
+            if (videoId) {
+                // ปรับ margin ลบ my-3 ออก เปลี่ยนเป็น mb-3 ให้วิดีโอชิดขอบบนมากขึ้น
+                mediaHtml = `
+                    <div class="w-full bg-black rounded-lg overflow-hidden mb-3 relative shadow-inner" style="height: 450px;">
+                        <iframe src="https://www.tiktok.com/embed/v2/${videoId}" class="absolute top-0 left-0 w-full h-full" frameborder="0" allowfullscreen scrolling="no" allow="encrypted-media;"></iframe>
+                    </div>
+                `;
+            } else {
+                mediaHtml = `
+                    <div class="bg-gray-50 rounded-lg p-4 mb-3 text-sm text-gray-600 text-center border border-gray-200">
+                        <i class="fa-brands fa-tiktok text-3xl mb-2 text-gray-400"></i><br>
+                        <a href="${data.url}" target="_blank" class="text-blue-500 hover:underline font-medium">คลิกเพื่อชมวิดีโอ (หน้าต่างใหม่)</a>
+                    </div>
+                `;
             }
 
             const cardHTML = `
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative transition hover:shadow-md">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative transition hover:shadow-md flex flex-col h-full">
                     ${statusBadge}
-                    <div class="p-5">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
-                                ${data.teamName.charAt(0)}
-                            </div>
-                            <div>
-                                <h3 class="font-bold text-lg leading-tight truncate w-48">${data.title}</h3>
-                                <p class="text-xs text-gray-500"><i class="fa-solid fa-users mr-1"></i> ${data.teamName}</p>
+                    <div class="p-4 flex-1 flex flex-col">
+                        
+                        <!-- ตัวเล่นวิดีโอ (ย้ายมาไว้บนสุด) -->
+                        ${mediaHtml}
+
+                        <!-- ข้อมูลรายละเอียด (ย้ายมาใต้คลิป จัดเรียงแบบมี Icon) -->
+                        <div class="mb-4">
+                            <!-- ชื่อเรื่องวิดีโอ -->
+                            <h3 class="font-bold text-lg leading-tight text-gray-800 mb-3 line-clamp-2">
+                                <i class="fa-solid fa-clapperboard text-blue-500 mr-2"></i>${data.title}
+                            </h3>
+                            
+                            <!-- กล่องข้อมูลทีม โรงเรียน และผู้ส่ง -->
+                            <div class="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 space-y-2 border border-gray-100">
+                                <p class="truncate"><i class="fa-solid fa-users text-indigo-500 w-5 text-center mr-1"></i> <strong>ทีม:</strong> ${data.teamName}</p>
+                                <p class="truncate"><i class="fa-solid fa-school text-orange-500 w-5 text-center mr-1"></i> <strong>ร.ร.:</strong> ${data.school || '-'}</p>
+                                <p class="truncate"><i class="fa-solid fa-user-pen text-green-500 w-5 text-center mr-1"></i> <strong>ผู้ส่ง:</strong> ${data.members || '-'}</p>
                             </div>
                         </div>
                         
-                        <div class="bg-gray-50 rounded-lg p-3 mb-4 text-sm text-gray-600">
-                            <p class="truncate"><i class="fa-solid fa-school mr-2"></i>${data.school}</p>
-                            <p class="mt-1"><a href="${data.url}" target="_blank" class="text-blue-500 hover:underline"><i class="fa-brands fa-tiktok mr-1"></i>ชมวิดีโอบน TikTok</a></p>
-                        </div>
-                        
-                        <div class="flex items-end justify-between mb-4">
-                            <div>
-                                <p class="text-xs text-gray-500 mb-1">คะแนนปัจจุบัน</p>
-                                <p class="text-3xl font-extrabold text-gray-800 leading-none">${data.score.toLocaleString()} <span class="text-sm font-normal text-gray-500">โหวต</span></p>
+                        <!-- ส่วนแสดงคะแนนและปุ่มโหวต (ดันให้อยู่ล่างสุดเสมอ) -->
+                        <div class="mt-auto pt-3 border-t border-gray-100">
+                            <div class="flex items-end justify-between mb-4">
+                                <div>
+                                    <p class="text-xs text-gray-500 mb-1">คะแนนปัจจุบัน</p>
+                                    <p class="text-3xl font-extrabold text-gray-800 leading-none">${data.score.toLocaleString()} <span class="text-sm font-normal text-gray-500">โหวต</span></p>
+                                </div>
+                                <div class="text-pink-500 text-2xl opacity-20"><i class="fa-solid fa-fire"></i></div>
                             </div>
-                            <div class="text-pink-500 text-2xl opacity-20"><i class="fa-solid fa-fire"></i></div>
+                            
+                            <button onclick="voteVideo('${id}')" id="btn-vote-${id}" class="w-full py-3 rounded-lg font-bold transition duration-200 ${btnClass}" ${disabledAttr}>
+                                ${!data.isOpen ? '<i class="fa-solid fa-lock mr-2"></i> ปิดรับโหวตแล้ว' : btnText}
+                            </button>
                         </div>
-                        
-                        <button onclick="voteVideo('${id}')" id="btn-vote-${id}" class="w-full py-3 rounded-lg font-bold transition duration-200 ${btnClass}" ${disabledAttr}>
-                            ${!data.isOpen ? '<i class="fa-solid fa-lock mr-2"></i> ปิดรับโหวตแล้ว' : btnText}
-                        </button>
                     </div>
                 </div>
             `;
