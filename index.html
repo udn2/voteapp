@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบโหวตผลงาน</title>
+    <!-- โหลด Bootstrap 5 เพื่อความสวยงาม -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light p-4">
+
+    <div class="container bg-white p-4 rounded shadow-sm max-w-md">
+        <h4 class="mb-4">ทดสอบเพิ่มวิดีโอเข้าระบบ</h4>
+        <!-- ปุ่มสำหรับกดเพื่อเรียกฟังก์ชันเพิ่มข้อมูล -->
+        <button onclick="addFirstVideo()" class="btn btn-primary">
+            + บันทึกวิดีโอทดสอบลง Firestore
+        </button>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- ส่วนของ Firebase Script (วางไว้ก่อนปิด body) -->
+    <!-- ========================================== -->
+    <script type="module">
+        // 1. นำเข้าเครื่องมือที่ต้องใช้จาก Firebase ผ่าน CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // 2. นำ firebaseConfig ที่ก๊อปปี้มา วางตรงนี้ครับ
+        const firebaseConfig = {
+  apiKey: "AIzaSyBCVi3Q-KGiJYSyXMHSfPm6-uTMGABz6Rk",
+  authDomain: "udon2-voteapp.firebaseapp.com",
+  databaseURL: "https://udon2-voteapp-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "udon2-voteapp",
+  storageBucket: "udon2-voteapp.firebasestorage.app",
+  messagingSenderId: "902343606831",
+  appId: "1:902343606831:web:b637ae90dbbce540327cda"
+};
+
+        // 3. เริ่มต้นเชื่อมต่อแอปและฐานข้อมูล Firestore
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 4. เขียนฟังก์ชันสำหรับเพิ่มข้อมูล
+        // ใช้ window.addFirstVideo เพื่อให้ปุ่มใน HTML มองเห็นฟังก์ชันนี้
+        window.addFirstVideo = async function() {
+            try {
+                // อ้างอิงไปที่ Collection ชื่อ "videos" (ถ้ายังไม่มี ระบบจะสร้างให้เอง)
+                const docRef = await addDoc(collection(db, "videos"), {
+                    title: "โครงงานนวัตกรรมสื่อการสอน",
+                    teamName: "โรงเรียนตัวอย่าง",
+                    url: "https://www.tiktok.com/@username/video/123456789",
+                    score: 0, // เริ่มต้นที่ 0 คะแนน
+                    isOpen: true, // สถานะเปิดรับโหวต
+                    createdAt: new Date() // เก็บเวลาที่ส่งงาน
+                });
+                
+                alert("บันทึกข้อมูลสำเร็จ! ID เอกสารคือ: " + docRef.id);
+                console.log("Document written with ID: ", docRef.id);
+
+            } catch (error) {
+                console.error("เกิดข้อผิดพลาดในการบันทึก: ", error);
+                alert("บันทึกไม่สำเร็จ ลองตรวจสอบ Console");
+            }
+        };
+    </script>
+</body>
+</html>
