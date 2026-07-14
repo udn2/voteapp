@@ -39,106 +39,102 @@
         .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
     </style>
 </head>
-<body class="text-gray-800 antialiased min-h-screen flex flex-col">
+<body class="text-gray-800">
 
-    <!-- Navigation Bar -->
-    <nav class="bg-white shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
-            <!-- ปรับเป็น flex-col (แนวตั้ง) ในมือถือ และ flex-row (แนวนอน) ในหน้าจอใหญ่ -->
-            <div class="flex flex-col md:flex-row justify-between items-center py-2 md:h-16 gap-2">
-                
-                <!-- Logo & Title -->
-                <div class="flex items-center text-center w-full justify-center md:justify-start md:w-auto">
-                    <i class="fa-brands fa-tiktok text-2xl md:text-3xl mr-2 text-black flex-shrink-0"></i>
-                    <!-- ปรับขนาดฟอนต์ให้เล็กลงนิดหน่อยในมือถือ -->
-                    <span class="font-bold text-sm sm:text-base md:text-xl tiktok-text leading-tight">UDON 2 Anti Drunks Tiktok Vote</span>
-                </div>
-
-                <!-- Navigation Buttons -->
-                <div class="flex items-center justify-center space-x-1 sm:space-x-2 w-full md:w-auto">
-                    <!-- เพิ่ม whitespace-nowrap ป้องกันข้อความในปุ่มเด้งตกบรรทัด -->
-                    <button onclick="switchTab('vote-tab')" class="nav-btn whitespace-nowrap px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-gray-700 hover:text-black hover:bg-gray-100 transition" id="btn-vote-tab">
-                        <i class="fa-solid fa-fire mr-1 text-red-500"></i> โหวตผลงาน
-                    </button>
-                    <button onclick="switchTab('submit-tab')" class="nav-btn whitespace-nowrap px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-gray-700 hover:text-black hover:bg-gray-100 transition" id="btn-submit-tab">
-                        <i class="fa-solid fa-paper-plane mr-1 text-blue-500"></i> ส่งผลงาน
-                    </button>
-                    <button onclick="switchTab('admin-tab')" class="nav-btn whitespace-nowrap px-2 md:px-3 py-2 rounded-md text-xs md:text-sm font-medium text-gray-700 hover:text-black hover:bg-gray-100 transition" id="btn-admin-tab">
-                        <i class="fa-solid fa-gear mr-1 text-gray-500"></i> จัดการ
-                    </button>
+    <!-- แถบเมนูด้านบน (รองรับมือถือ) -->
+    <nav class="bg-white shadow-md sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center py-3 gap-3 md:gap-0 h-auto md:h-16">
+                <!-- โลโก้และชื่อโปรเจกต์ -->
+                <div class="flex items-center text-center md:text-left">
+                    <i class="fa-brands fa-tiktok text-black text-2xl md:text-3xl mr-2"></i>
+                    <span class="font-bold text-lg md:text-xl text-gray-800 leading-tight">UDON 2 Anti Drunks Tiktok Vote</span>
                 </div>
                 
+                <!-- ปุ่มเมนูต่างๆ -->
+                <div class="flex space-x-1 md:space-x-2 bg-gray-100 p-1 rounded-lg w-full md:w-auto justify-center">
+                    <button onclick="switchTab('vote')" id="nav-vote" class="nav-btn flex-1 md:flex-none px-3 md:px-5 py-2 rounded-md text-xs md:text-sm font-medium bg-white shadow-sm text-blue-600 transition whitespace-nowrap">
+                        <i class="fa-solid fa-fire mr-1"></i> โหวตผลงาน
+                    </button>
+                    <button onclick="switchTab('submit')" id="nav-submit" class="nav-btn flex-1 md:flex-none px-3 md:px-5 py-2 rounded-md text-xs md:text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition whitespace-nowrap">
+                        <i class="fa-solid fa-paper-plane mr-1"></i> ส่งผลงาน
+                    </button>
+                    <button onclick="switchTab('admin')" id="nav-admin" class="nav-btn flex-1 md:flex-none px-3 md:px-5 py-2 rounded-md text-xs md:text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition whitespace-nowrap">
+                        <i class="fa-solid fa-gear mr-1"></i> จัดการ
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
 
-    <!-- Custom Toast Notification (Replaces alert) -->
-    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+    <!-- คอนเทนเนอร์แสดงการแจ้งเตือน -->
+    <div id="toast-container"></div>
 
-    <!-- Main Content Area -->
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-
-        <!-- ==================== VOTING TAB ==================== -->
-        <section id="vote-tab" class="tab-content">
-            <div class="text-center mb-10">
-                <h1 class="text-3xl md:text-4xl font-bold mb-3">🔥 โหวตวิดีโอยอดเยี่ยม</h1>
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        
+        <!-- ==================== VOTE TAB ==================== -->
+        <section id="vote-tab" class="tab-content active">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl md:text-4xl font-bold mb-3"><i class="fa-solid fa-trophy text-yellow-500"></i> โหวตผลงานวิดีโอยอดเยี่ยม</h1>
                 <p class="text-gray-500">ร่วมโหวตให้คะแนนผลงานที่คุณชื่นชอบ (1 คน / 1 โหวต / 1 วิดีโอ)</p>
             </div>
-            
-            <div id="loading-videos" class="text-center py-10">
-                <i class="fa-solid fa-spinner fa-spin text-4xl text-gray-400 mb-3"></i>
-                <p class="text-gray-500">กำลังโหลดข้อมูล...</p>
-            </div>
 
-            <!-- Video Grid -->
-            <div id="video-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
-                <!-- Cards will be injected here by JS -->
+            <!-- Grid สำหรับแสดงผลงาน (ดึงจาก Firebase) -->
+            <div id="video-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="col-span-full text-center py-10">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-500 mb-3"></i>
+                    <p class="text-gray-500">กำลังโหลดข้อมูลผลงาน...</p>
+                </div>
             </div>
         </section>
 
         <!-- ==================== SUBMIT TAB ==================== -->
-        <section id="submit-tab" class="tab-content hidden max-w-2xl mx-auto">
-            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+        <section id="submit-tab" class="tab-content">
+            <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-gray-100">
                 <div class="text-center mb-8">
-                    <h2 class="text-2xl font-bold">📤 ส่งผลงานเข้าร่วมประกวด</h2>
-                    <p class="text-gray-500 text-sm mt-2">กรอกข้อมูลให้ครบถ้วนและตรวจสอบลิงก์วิดีโอ</p>
+                    <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold">ส่งผลงานเข้าร่วมประกวด</h2>
+                    <p class="text-gray-500 text-sm mt-2">กรอกข้อมูลให้ครบถ้วนเพื่อนำวิดีโอของคุณขึ้นระบบโหวต</p>
                 </div>
 
-                <form id="submit-form" class="space-y-5">
+                <form id="submit-form" onsubmit="submitVideo(event)" class="space-y-5">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อผลงาน (Title) *</label>
-                        <input type="text" id="inp-title" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="เช่น นวัตกรรมลดโลกร้อน">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อเรื่อง / ชื่อวิดีโอ <span class="text-red-500">*</span></label>
+                        <input type="text" id="title" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="เช่น นวัตกรรมลดการดื่ม...">
                     </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อทีม *</label>
-                            <input type="text" id="inp-team" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="เช่น ทีมพลังใบ">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อทีม <span class="text-red-500">*</span></label>
+                        <input type="text" id="team" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="ชื่อทีมของคุณ">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">รายชื่อผู้ส่งงาน <span class="text-red-500">*</span></label>
+                        <input type="text" id="members" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="ชื่อ-นามสกุล (คั่นด้วยลูกน้ำ)">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">โรงเรียน / สถาบัน <span class="text-red-500">*</span></label>
+                        <input type="text" id="school" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="ระบุชื่อโรงเรียน">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ลิงก์วิดีโอ TikTok <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fa-brands fa-tiktok text-gray-400"></i>
+                            </div>
+                            <input type="url" id="link" required class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="https://www.tiktok.com/@username/video/123456789">
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">โรงเรียน / สถาบัน *</label>
-                            <input type="text" id="inp-school" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="เช่น รร.ตัวอย่าง">
-                        </div>
                     </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อผู้ส่ง (ตัวแทน) *</label>
-                        <input type="text" id="inp-name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="นาย/นางสาว...">
+                    <div class="pt-4">
+                        <button type="submit" id="btn-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-lg shadow-blue-200">
+                            <i class="fa-solid fa-paper-plane mr-2"></i> ส่งผลงาน
+                        </button>
                     </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ลิงก์ TikTok (URL เต็ม) *</label>
-                        <input type="url" id="inp-link" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="https://www.tiktok.com/@username/video/1234567890">
-                        <p class="text-xs text-gray-400 mt-1"><i class="fa-solid fa-circle-info"></i> กรุณาใช้ลิงก์เต็มผ่านเบราว์เซอร์ เพื่อให้ระบบดึงวิดีโอมาแสดงได้</p>
-                    </div>
-
-                    <button type="submit" id="btn-submit" class="w-full bg-black text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-800 transition shadow-md flex justify-center items-center">
-                        <i class="fa-solid fa-cloud-arrow-up mr-2"></i> ส่งผลงาน
-                    </button>
                 </form>
             </div>
         </section>
-<!-- ==================== ADMIN TAB ==================== -->
+
+        <!-- ==================== ADMIN TAB ==================== -->
         <section id="admin-tab" class="tab-content">
             
             <!-- ส่วนล็อกอินสำหรับ Admin -->
